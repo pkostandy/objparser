@@ -1,5 +1,5 @@
 """
-This module implements a parser for Analyze spatial maps (.obj files).
+This module implements a parser for Analyze object maps (.obj files).
 
 Author: Petro Kostandy
 """
@@ -7,8 +7,8 @@ import struct
 import numpy as np
 
 
-class SpatialObject(object):
-    """Data class storing header information about every object in the spatial map."""
+class AnalyzeObject(object):
+    """Data class storing header information about a particular object in the object map."""
     def __init__(self):
         self.name = ''  # null-terminated char32 string
         self.display_flag = 0  # int, 0 or 1
@@ -59,12 +59,12 @@ class SpatialObject(object):
         self.blendfactor = 0.0  # float32
 
 
-class AnalyzeSpatialMap(object):
-    """Describes an object that can fully capture the contents of an Analayze spatial map. This
+class AnalyzeObjectMap(object):
+    """Describes an object that can fully capture the contents of an Analayze object map. This
     class can be initalized with an optional ``file`` argument.
 
     Args:
-        file (str): Analyze spatial map file path. Optional.
+        file (str): Analyze object map file path. Optional.
 
     The following attributes are initialized and populated once `from_file` is called:
         version_code (int): File format revision number
@@ -75,20 +75,20 @@ class AnalyzeSpatialMap(object):
         n_objects (int): Number of objects (up to 256)
         n_vols (int): Number of object volumes
 
-        objects (list): List of objects included in the spatial map
-        vols (list): List of volumes contained within the spatial map;
+        objects (list): List of objects included in the object map
+        vols (list): List of volumes contained within the object map;
             where each map is a 3 dimensional array.
 
     Usage::
         # Create instance with file argument
-        s_map = AnalayzeSpatialMap(file='path/to/file.obj')
+        obj_map = AnalayzeObjectMap(file='path/to/file.obj')
 
         # Alternatively, initialize instance and then call from_file method
-        s_map = AnalyzeSpatialMap()
-        s_map.from_file('path/to/file.obj')
+        obj_map = AnalyzeObjectMap()
+        obj_map.from_file('path/to/file.obj')
 
         # Get numpy array representing the first volume
-        s_map.get_data(0)
+        obj_map.get_data(0)
     """
     def __init__(self, file=None):
         self.version_code = 0
@@ -114,7 +114,7 @@ class AnalyzeSpatialMap(object):
 
     def from_file(self, filename, verbose=0):
         """Parses the .obj file that is passed preserving its header information and casting
-        the spatial maps as numpy arrays.
+        the object maps as numpy arrays.
 
         Args:
             filename (str): Full .obj file path
@@ -144,10 +144,10 @@ class AnalyzeSpatialMap(object):
             if self.version > 7:
                 self.n_vols = header[4]
 
-            # Read in each object's parameters sequentially from spatial map header
+            # Read in each object's parameters sequentially from object map header
             # Numerics bytes are stored by Analyze in big-endian order
             for i in range(self.n_objects):
-                obj = SpatialObject()
+                obj = AnalyzeObject()
 
                 obj.name = self._read_nts(f.read(32))
                 obj.display_flag = int.from_bytes(f.read(4), byteorder='big')
@@ -227,12 +227,12 @@ class AnalyzeSpatialMap(object):
 
             if verbose > 0:
                 print('Successfully imported {0}'.format(filename))
-                print('Spatial map shape: {0}'.format(self.vols[0].shape))
+                print('Object map shape: {0}'.format(self.vols[0].shape))
                 print('Number of objects (includes background): {0}'.format(self.n_objects))
                 print('Number of volumes: {0}'.format(self.n_vols))
                 print()
 
 
     def get_data(self, idx=0):
-        """Returns a numpy array representing the spatial map."""
+        """Returns a numpy array representing the object map."""
         return self.vols[idx]
